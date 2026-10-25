@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Marstek</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --bg:var(--tg-theme-bg-color,#0f1115);--card:var(--tg-theme-secondary-bg-color,#1a1d24);
+  --fg:var(--tg-theme-text-color,#e8eaed);--hint:var(--tg-theme-hint-color,#8b93a1);
+  --accent:var(--tg-theme-button-color,#3b82f6);--accent-fg:var(--tg-theme-button-text-color,#fff);
+  --green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6;--violet:#a78bfa;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.35 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+body{padding:12px 12px calc(76px + env(safe-area-inset-bottom))}
+h1{font-size:15px;margin:0;font-weight:600}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;background:var(--card)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--hint)}
+.dot.ok{background:var(--green);box-shadow:0 0 0 0 rgba(34,197,94,.6);animation:p 1.6s infinite}
+.dot.bad{background:var(--red)}.dot.warn{background:var(--amber)}
+@keyframes p{70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:10px}
+.hint{color:var(--hint);font-size:12px}
+.hero{display:flex;align-items:center;gap:16px}
+.ring{width:118px;height:118px;flex:none;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:30px;line-height:1}.ring span{font-size:11px;color:var(--hint);margin-top:2px}
+.stat{flex:1;min-width:0}
+.big{font-size:30px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.big small{font-size:15px;font-weight:500;color:var(--hint)}
+.lbl{font-size:12px;color:var(--hint);margin-top:2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border-radius:14px;padding:12px}
+.tile .v{font-size:20px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile .v small{font-size:12px;color:var(--hint);font-weight:500}
+.banner{border-radius:14px;padding:11px 13px;margin-bottom:10px;font-weight:600;font-size:14px}
+.banner.red{background:rgba(239,68,68,.16);color:#fca5a5}.banner.amber{background:rgba(245,158,11,.16);color:#fcd34d}
+.banner.green{background:rgba(34,197,94,.14);color:#86efac}
+canvas{width:100%;height:150px;display:block}
+.seg{display:flex;gap:6px;margin:0 0 8px}
+.seg button{flex:1;border:0;border-radius:10px;padding:7px 0;background:rgba(127,127,127,.15);color:var(--fg);font:inherit;font-size:13px}
+.seg button.on{background:var(--accent);color:var(--accent-fg)}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--hint);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid rgba(127,127,127,.15)}
+.row:last-child{border-bottom:0}
+.sw{position:relative;width:46px;height:28px;border-radius:99px;background:rgba(127,127,127,.35);flex:none;transition:.2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on{background:var(--green)}.sw.on::after{left:21px}
+.chips{display:flex;gap:6px}.chips button{border:0;border-radius:9px;padding:6px 10px;background:rgba(127,127,127,.15);color:var(--fg);font:inherit;font-size:13px}
+.chips button.on{background:var(--accent);color:var(--accent-fg)}
+.out{padding:9px 0;border-bottom:1px solid rgba(127,127,127,.15);display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.out:last-child{border-bottom:0}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);padding:6px 6px calc(6px + env(safe-area-inset-bottom));border-top:1px solid rgba(127,127,127,.18)}
+nav button{flex:1;border:0;background:none;color:var(--hint);font:inherit;font-size:11px;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button .i{font-size:20px;line-height:1}nav button.on{color:var(--accent)}
+.hide{display:none}
+.err{padding:30px 10px;text-align:center;color:var(--hint)}
+.inp{display:flex;gap:6px;align-items:center}
+.inp input{width:110px;background:rgba(127,127,127,.15);color:var(--fg);border:0;border-radius:9px;padding:7px 9px;font:inherit;font-size:14px;text-align:right}
+.inp button,.btn{border:0;border-radius:10px;padding:9px 14px;background:var(--accent);color:var(--accent-fg);font:inherit;font-size:14px}
+.btn.ghost{background:rgba(127,127,127,.18);color:var(--fg)}.btn.danger{background:rgba(239,68,68,.18);color:#fca5a5}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+h2{font-size:13px;font-weight:600;color:var(--hint);margin:14px 4px 6px;text-transform:uppercase;letter-spacing:.04em}
+.row small{display:block;color:var(--hint);font-size:11px;margin-top:2px}
+.row>span{flex:1;min-width:0;padding-right:10px}
+.kv{display:flex;justify-content:space-between;padding:6px 0;font-size:14px;gap:10px}.kv span:first-child{color:var(--hint)}
+.mini{border:0;background:rgba(127,127,127,.18);color:var(--fg);border-radius:8px;padding:5px 9px;font:inherit;font-size:12px}
+.toast{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));background:#111;color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;z-index:9;opacity:0;transition:.25s;pointer-events:none}
+.toast.show{opacity:1}.toast.err{background:#7f1d1d}
+select{background:var(--card);color:var(--fg);border:0;border-radius:10px;padding:6px 8px;font:inherit;font-size:13px;max-width:55%}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1 id="title">⚡ Marstek</h1>
+  <select id="devsel" class="hide"></select>
+  <span class="pill"><i class="dot" id="ldot"></i><span id="ltxt">…</span></span>
+</div>
+<div id="err" class="err hide"></div>
+
+<section id="p-live">
+  <div id="banners"></div>
+  <div class="card hero">
+    <div class="ring">
+      <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(127,127,127,.2)" stroke-width="9"/>
+        <circle id="arc" cx="50" cy="50" r="42" fill="none" stroke="var(--green)" stroke-width="9" stroke-linecap="round" stroke-dasharray="263.9" stroke-dashoffset="263.9" style="transition:stroke-dashoffset .8s,stroke .4s"/></svg>
+      <div class="c"><b id="soc">–</b><span id="kwh">–</span></div>
+    </div>
+    <div class="stat">
+      <div class="big" id="pw">–</div>
+      <div class="lbl" id="pwl">&nbsp;</div>
+      <div class="lbl" id="fc" style="margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="tile"><div class="hint">🔌 Сеть</div><div class="v" id="grid">–</div><div class="hint" id="gridl">&nbsp;</div></div>
+    <div class="tile"><div class="hint">🏠 Выход EPS</div><div class="v" id="eps">–</div><div class="hint">резерв</div></div>
+    <div class="tile"><div class="hint">📈 Сегодня</div><div class="v" id="day">–</div><div class="hint">заряд / отдача</div></div>
+    <div class="tile"><div class="hint">📶 Wi-Fi</div><div class="v" id="wifi">–</div><div class="hint" id="mode">&nbsp;</div></div>
+  </div>
+  <div class="card" style="margin-top:10px">
+    <div class="hint" style="margin-bottom:4px">Мощность батареи, последние ~2 мин</div>
+    <canvas id="cv-live" height="130"></canvas>
+  </div>
+  <div class="card"><div class="hint" style="margin-bottom:4px">Все показания</div><div id="fieldsList"></div></div>
+  <div class="btns"><button class="btn ghost" id="btnRefresh">🔄 Обновить из облака</button></div>
+</section>
+
+<section id="p-hist" class="hide">
+  <div class="seg" id="hseg"><button data-h="1">1 ч</button><button data-h="6" class="on">6 ч</button><button data-h="24">24 ч</button><button data-h="168">7 дн</button></div>
+  <div class="card"><div class="hint">Заряд, %</div><canvas id="cv-soc"></canvas></div>
+  <div class="card"><div class="hint">Мощность, Вт</div><canvas id="cv-pw"></canvas>
+    <div class="legend"><span><i style="background:var(--blue)"></i>батарея (+заряд / −разряд)</span><span><i style="background:var(--amber)"></i>сеть</span></div></div>
+  <div class="hint" id="hnote" style="text-align:center"></div>
+</section>
+
+<section id="p-out" class="hide">
+  <div class="seg" id="oseg"><button data-d="1">24 ч</button><button data-d="7" class="on">7 дн</button><button data-d="30">30 дн</button></div>
+  <div class="grid" id="osum"></div>
+  <div class="card" style="margin-top:10px" id="olist"></div>
+</section>
+
+<section id="p-set" class="hide"><div id="setbody"></div></section>
+<section id="p-acc" class="hide"><div id="accbody"></div></section>
+<div class="toast" id="toast"></div>
+
+<nav>
+  <button data-p="live" class="on"><span class="i">📡</span>Live</button>
+  <button data-p="hist"><span class="i">📈</span>История</button>
+  <button data-p="out"><span class="i">🔴</span>Отключения</button>
+  <button data-p="set"><span class="i">⚙️</span>Настройки</button>
+  <button data-p="acc"><span class="i">👥</span>Доступ</button>
+</nav>
+
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); try{tg.setHeaderColor('secondary_bg_color')}catch(e){} }
+const INIT = tg ? tg.initData : '';
+const $ = id => document.getElementById(id);
+let did = null, page = 'live', state = null, liveHist = [], lastOk = 0, busy = false;
+
+async function api(path, opt) {
+  const r = await fetch(path, Object.assign({headers: {'X-Init-Data': INIT, 'Content-Type': 'application/json'}}, opt));
+  if (r.status === 401) throw new Error('Откройте приложение из Telegram-бота (кнопка «📱 Приложение»).');
+  if (r.status === 403) throw new Error('Нет доступа.');
+  if (!r.ok) throw new Error('Ошибка ' + r.status);
+  return r.json();
+}
+function showErr(m){ const e=$('err'); e.textContent=m; e.classList.toggle('hide', !m); }
+const fmt = (v, d=0) => v == null ? '–' : Number(v).toLocaleString('ru', {maximumFractionDigits: d, minimumFractionDigits: d});
+function dur(sec){ sec=Math.max(0,Math.round(sec/60)); const d=Math.floor(sec/1440),h=Math.floor(sec%1440/60),m=sec%60; return [d&&d+' д',h&&h+' ч',(m||(!d&&!h))&&m+' мин'].filter(Boolean).join(' '); }
+const hhmm = ts => new Date(ts*1000).toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Kyiv'});
+const ddmm = ts => new Date(ts*1000).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Kyiv'});
+
+/* ---------- charts ---------- */
+function chart(cv, series, opt={}) {
+  const dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w*dpr; cv.height = h*dpr;
+  const g = cv.getContext('2d'); g.scale(dpr, dpr); g.clearRect(0,0,w,h);
+  const all = series.flatMap(s => s.y.filter(v => v != null));
+  const xs = series[0]?.x || [];
+  if (!all.length || xs.length < 2) { g.fillStyle = '#8b93a1'; g.font = '13px sans-serif'; g.textAlign='center'; g.fillText('Пока мало данных', w/2, h/2); return; }
+  let lo = opt.min ?? Math.min(...all), hi = opt.max ?? Math.max(...all);
+  if (opt.zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  if (hi - lo < (opt.minSpan||10)) { const m=(hi+lo)/2; lo = m-(opt.minSpan||10)/2; hi = m+(opt.minSpan||10)/2; }
+  const pad = {l:36, r:6, t:6, b:18}, W = w-pad.l-pad.r, H = h-pad.t-pad.b;
+  const x0 = xs[0], x1 = xs[xs.length-1] || x0+1;
+  const X = t => pad.l + (t-x0)/(x1-x0||1)*W, Y = v => pad.t + (1-(v-lo)/(hi-lo))*H;
+  g.strokeStyle = 'rgba(127,127,127,.18)'; g.fillStyle = '#8b93a1'; g.font = '10px sans-serif'; g.lineWidth = 1;
+  g.textAlign = 'right';
+  for (let i=0;i<=3;i++){ const v = lo+(hi-lo)*i/3, y = Y(v); g.beginPath(); g.moveTo(pad.l,y); g.lineTo(w-pad.r,y); g.stroke(); g.fillText(Math.round(v), pad.l-4, y+3); }
+  g.textAlign = 'center';
+  for (let i=0;i<=3;i++){ const t = x0+(x1-x0)*i/3; g.fillText(opt.tfmt ? opt.tfmt(t) : hhmm(t), Math.min(w-18,Math.max(pad.l+10,X(t))), h-4); }
+  if (opt.zero && lo < 0 && hi > 0) { g.strokeStyle='rgba(127,127,127,.45)'; g.beginPath(); g.moveTo(pad.l,Y(0)); g.lineTo(w-pad.r,Y(0)); g.stroke(); }
+  series.forEach((s, k) => {
+    g.strokeStyle = s.color; g.lineWidth = 2; g.lineJoin = 'round'; g.beginPath(); let pen = false, prev = null;
+    s.x.forEach((t, i) => { const v = s.y[i]; if (v == null) { pen = false; return; }
+      if (prev != null && t - prev > (opt.gap||1e9)) pen = false; prev = t;
+      pen ? g.lineTo(X(t), Y(v)) : g.moveTo(X(t), Y(v)); pen = true; });
+    g.stroke();
+    if (s.fill) { g.lineTo(X(s.x[s.x.length-1]), Y(Math.max(lo,Math.min(0,hi)))); g.lineTo(X(s.x[0]), Y(Math.max(lo,Math.min(0,hi)))); g.closePath(); g.fillStyle = s.color+'22'; g.fill(); }
+  });
+}
+
+/* ---------- live ---------- */
+function setConn(kind, txt){ $('ldot').className = 'dot ' + kind; $('ltxt').textContent = txt; }
+function renderState(s) {
+  state = s;
+  $('title').textContent = '⚡ ' + s.name;
+  const soc = s.soc;
+  if (soc != null) {
+    $('soc').textContent = Math.round(soc) + '%';
+    $('kwh').textContent = fmt(soc/100*s.capacity, 2) + ' кВт·ч';
+    const a = $('arc'); a.style.strokeDashoffset = 263.9*(1-soc/100);
+    a.style.stroke = s.on === false ? (soc<=15?'var(--red)':'var(--amber)') : (soc<=15?'var(--red)':'var(--green)');
+  }
+  const ch = s.charge||0, di = s.discharge||0;
+  const pw = $('pw'), pl = $('pwl');
+  if (!s.live) { pw.innerHTML = '–'; pl.textContent = 'ждём живой кадр…'; }
+  else if (ch >= 30) { pw.innerHTML = '⚡ ' + fmt(ch) + ' <small>Вт</small>'; pl.textContent = 'заряжается'; }
+  else if (di >= 30) { pw.innerHTML = '🪫 ' + fmt(di) + ' <small>Вт</small>'; pl.textContent = 'отдаёт в нагрузку'; }
+  else { pw.innerHTML = '⏸ ' + fmt(Math.max(ch,di)) + ' <small>Вт</small>'; pl.textContent = 'в простое'; }
+  $('fc').textContent = s.forecast ? '⏳ Хватит ещё ~' + dur(s.forecast.hours*3600) + ' (до ≈' + hhmm(s.forecast.until) + ')' : '';
+  const g = s.grid;
+  $('grid').innerHTML = g == null ? '–' : fmt(Math.abs(g)) + ' <small>Вт</small>';
+  $('gridl').textContent = g == null ? '' : Math.abs(g) < 5 ? 'нет обмена' : (g < 0 ? '⬇️ берём из сети' : '⬆️ отдаём в сеть');
+  $('eps').innerHTML = s.eps == null ? '–' : fmt(s.eps) + ' <small>Вт</small>';
+  $('day').innerHTML = s.day_charge == null ? '–' : '+' + fmt(s.day_charge,2) + ' / −' + fmt(s.day_discharge,2) + ' <small>кВт·ч</small>';
+  $('wifi').innerHTML = s.wifi == null ? '–' : fmt(s.wifi) + ' <small>dBm</small>';
+  $('mode').textContent = s.work_text || '';
+  $('fieldsList').innerHTML = (s.fields||[]).map(f => `<div class="kv"><span>${esc(f.label)}</span><b>${esc(f.value)}</b></div>`).join('') || '<div class="hint">нет данных</div>';
+  let b = '';
+  if (s.readonly) b += '<div class="banner green">👁 Только просмотр' + (s.owner_name ? ' · владелец: ' + esc(s.owner_name) : '') + '</div>';
+  if (s.on === false) b += '<div class="banner red">🔴 Сети нет — работа от батареи' + (s.since ? ' · уже ' + dur(Date.now()/1000 - s.since) : '') + '</div>';
+  if (s.link_lost) b += '<div class="banner amber">📵 Связь с батареей потеряна ' + dur(s.link_lost) + '</div>';
+  (s.anomalies||[]).forEach(a => b += '<div class="banner amber">' + esc(a.title) + '<div style="font-weight:400;font-size:12px;margin-top:3px">' + esc(a.text) + '</div></div>');
+  if (s.error_code && String(s.error_code) !== '0' && String(s.error_code) !== '800') b += '<div class="banner amber">⚠️ Код ошибки станции: ' + esc(s.error_code) + '</div>';
+  $('banners').innerHTML = b;
+  if (s.live && s.battery_power != null) { liveHist.push([Date.now()/1000, s.battery_power]); if (liveHist.length > 60) liveHist.shift(); }
+  drawLive();
+  const age = s.frame_age;
+  if (!s.live) setConn('warn', 'нет кадра');
+  else if (age > 20) setConn('warn', age + ' с назад');
+  else setConn('ok', 'LIVE');
+}
+function drawLive(){ chart($('cv-live'), [{x: liveHist.map(p=>p[0]), y: liveHist.map(p=>p[1]), color: '#3b82f6', fill: true}], {zero: true, minSpan: 100, tfmt: t => new Date(t*1000).toLocaleTimeString('ru',{minute:'2-digit',second:'2-digit'})}); }
+
+async function poll() {
+  if (busy || document.hidden || did == null) return;
+  busy = true;
+  try { renderState(await api('/api/state?did=' + did + (page === 'live' ? '&live=1' : ''))); lastOk = Date.now(); showErr(''); }
+  catch (e) { if (Date.now() - lastOk > 8000) setConn('bad', 'нет связи'); if (!state) showErr(e.message); }
+  finally { busy = false; }
+}
+
+/* ---------- history ---------- */
+let hours = 6;
+async function loadHist() {
+  try {
+    const r = await api('/api/history?did=' + did + '&hours=' + hours);
+    const p = r.points, x = p.map(q=>q.ts), gap = Math.max(600, hours*3600/40);
+    const tf = hours > 24 ? ddmm : hhmm;
+    chart($('cv-soc'), [{x, y: p.map(q=>q.soc), color: '#22c55e', fill: true}], {min: 0, max: 100, tfmt: tf, gap});
+    chart($('cv-pw'), [{x, y: p.map(q=>q.bp), color: '#3b82f6'}, {x, y: p.map(q=>q.grid), color: '#f59e0b'}], {zero: true, minSpan: 200, tfmt: tf, gap});
+    $('hnote').textContent = p.length ? 'Точек: ' + p.length + ' · история копится с момента запуска новой версии бота' : 'Данных пока нет — подождите пару минут.';
+  } catch (e) { $('hnote').textContent = e.message; }
+}
+
+/* ---------- outages ---------- */
+let odays = 7;
+async function loadOut() {
+  try {
+    const r = await api('/api/outages?did=' + did + '&days=' + odays);
+    $('osum').innerHTML = r.count === 0 ? '<div class="tile" style="grid-column:1/3;text-align:center">✅ Отключений не было</div>' :
+      `<div class="tile"><div class="hint">Отключений</div><div class="v">${r.count}</div></div>
+       <div class="tile"><div class="hint">Без света всего</div><div class="v" style="font-size:16px">${dur(r.total)}</div></div>
+       <div class="tile"><div class="hint">Самое долгое</div><div class="v" style="font-size:16px">${dur(r.longest)}</div></div>
+       <div class="tile"><div class="hint">Свет был</div><div class="v">${fmt(r.uptime_pct,1)}<small>%</small></div></div>`;
+    $('olist').innerHTML = r.items.length ? r.items.map(o => `<div class="out"><div>${ddmm(o.start)} → ${o.end ? ddmm(o.end) : '<b>идёт сейчас</b>'}<div class="hint">${o.start_soc != null ? '🔋 ' + Math.round(o.start_soc) + '%' + (o.end_soc != null ? ' → ' + Math.round(o.end_soc) + '%' : '') : ''}</div></div><b>${dur(o.dur)}</b></div>`).join('') : '<div class="hint" style="text-align:center">Список пуст</div>';
+  } catch (e) { $('olist').textContent = e.message; }
+}
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let toastT;
+function toast(msg, bad){ const t=$('toast'); t.textContent=msg; t.className='toast show'+(bad?' err':''); clearTimeout(toastT); toastT=setTimeout(()=>t.className='toast',2400); }
+const confirmBox = (msg) => new Promise(res => (tg && tg.showConfirm) ? tg.showConfirm(msg, res) : res(confirm(msg)));
+const buzz = () => { try{ tg.HapticFeedback.impactOccurred('light') }catch(e){} };
+async function post(path, body) {
+  const r = await fetch(path, {method:'POST', headers:{'X-Init-Data':INIT,'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  let j = {}; try { j = await r.json() } catch(e){}
+  if (!r.ok) throw new Error(j.message || j.error || ('Ошибка ' + r.status));
+  return j;
+}
+
+/* ---------- settings ---------- */
+let SETS = null;
+async function loadSettings(){
+  try { SETS = await api('/api/settings?did=' + did); } catch(e){ $('setbody').textContent = e.message; return; }
+  renderSet(); renderAcc();
+}
+function renderSet(){
+  const S = SETS, box = $('setbody');
+  if (!S) { box.innerHTML = '<div class="hint">Загрузка…</div>'; return; }
+  if (!S.owner) {
+    box.innerHTML = `<div class="card"><div class="banner green" style="margin:0 0 8px">👁 Вы смотрите это устройство. Настройки меняет владелец.</div>
+      <div class="row"><span>🔔 Мои уведомления об отключении света</span><div class="sw ${S.my_alerts?'on':''}" id="myAlerts"></div></div></div>`;
+    $('myAlerts').onclick = async () => { try { await post('/api/share', {did, op:'my_alerts'}); buzz(); await loadSettings(); } catch(e){ toast(e.message, 1) } };
+    return;
+  }
+  const groups = [];
+  S.schema.forEach(sp => {
+    let g = groups.find(x => x.name === sp.group);
+    if (!g) { g = {name: sp.group, rows: []}; groups.push(g); }
+    const v = S.values[sp.key];
+    let ctl = '', wide = false;
+    if (sp.type === 'bool') ctl = `<div class="sw ${v?'on':''}" data-k="${sp.key}"></div>`;
+    else if (sp.type === 'choice') { wide = sp.choices.length > 3; ctl = `<div class="chips">${sp.choices.map(c=>`<button data-c="${sp.key}" data-v="${esc(c.v)}" class="${String(v)===String(c.v)?'on':''}">${esc(c.t)}</button>`).join('')}</div>`; }
+    else ctl = `<div class="inp"><input data-i="${sp.key}" value="${esc(v)}" inputmode="${sp.type==='number'?'decimal':'text'}"><button data-save="${sp.key}">OK</button></div>`;
+    g.rows.push(`<div class="row"${wide?' style="flex-direction:column;align-items:flex-start;gap:8px"':''}><span>${esc(sp.label)}${sp.hint?`<small>${esc(sp.hint)}</small>`:''}</span>${ctl}</div>`);
+  });
+  let html = groups.map(g => `<h2>${esc(g.name)}</h2><div class="card">${g.rows.join('')}</div>`).join('');
+  html += `<h2>Показания на экране</h2><div class="card">` +
+    (S.fields.length ? S.fields.map(f => `<div class="row"><span>${esc(f.label)}</span><div class="sw ${f.on?'on':''}" data-f="${esc(f.key)}"></div></div>`).join('') +
+      `<div class="btns" style="margin-top:10px"><button class="mini" data-fa="1">Показать все</button><button class="mini" data-fa="0">Скрыть все</button></div>` : '<div class="hint">Данных ещё нет</div>') + `</div>`;
+  html += `<h2>Устройство</h2><div class="card"><div class="btns"><button class="btn ghost" data-a="test">🧪 Тест уведомления</button><button class="btn ghost" data-a="reset">↩️ Настройки по умолчанию</button><button class="btn danger" data-a="delete">🗑 Удалить устройство</button></div></div>`;
+  box.innerHTML = html;
+}
+async function applySetting(key, value){
+  try { const r = await post('/api/setting', {did, key, value}); SETS = r.settings; renderSet(); renderAcc(); if (r.state) renderState(r.state); buzz(); }
+  catch(e){ toast(e.message.replace(/<[^>]+>/g,''), 1); renderSet(); }
+}
+$('setbody').addEventListener('click', async e => {
+  const sw = e.target.closest('.sw[data-k]'); if (sw) return applySetting(sw.dataset.k, !sw.classList.contains('on'));
+  const f = e.target.closest('.sw[data-f]'); if (f) return applySetting('field:' + f.dataset.f, !f.classList.contains('on'));
+  const fa = e.target.closest('[data-fa]'); if (fa) return applySetting('fields_all', fa.dataset.fa === '1');
+  const c = e.target.closest('[data-c]'); if (c) { const v = c.dataset.v; return applySetting(c.dataset.c, (v === '' || isNaN(+v)) ? v : +v); }
+  const sv = e.target.closest('[data-save]'); if (sv) { const inp = $('setbody').querySelector(`[data-i="${sv.dataset.save}"]`); return applySetting(sv.dataset.save, inp.value); }
+  const ac = e.target.closest('[data-a]'); if (ac) {
+    const a = ac.dataset.a;
+    if (a === 'delete' && !(await confirmBox('Удалить устройство и всю его историю?'))) return;
+    if (a === 'reset' && !(await confirmBox('Сбросить все пороги и переключатели уведомлений?'))) return;
+    try {
+      const r = await post('/api/action', {did, action: a});
+      if (r.deleted) { toast('Удалено'); setTimeout(() => location.reload(), 600); return; }
+      if (r.settings) { SETS = r.settings; renderSet(); renderAcc(); }
+      if (r.state) renderState(r.state);
+      toast(a === 'test' ? 'Тест отправлен в чат с ботом' : 'Готово');
+    } catch(err){ toast(err.message, 1); }
+  }
+});
+$('setbody').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.i) applySetting(e.target.dataset.i, e.target.value); });
+$('btnRefresh').onclick = async () => { try { await post('/api/action', {did, action:'refresh'}); toast('Данные обновлены'); poll(); } catch(e){ toast(e.message, 1) } };
+
+/* ---------- access / admin ---------- */
+let ADM = null;
+function renderAcc(){
+  const S = SETS, box = $('accbody');
+  if (!S) { box.innerHTML = '<div class="hint">Загрузка…</div>'; return; }
+  let html = '';
+  if (S.owner) {
+    html += `<h2>Кто смотрит это устройство</h2><div class="card">`;
+    html += S.shares.length ? S.shares.map(r => `<div class="row"><span>${esc(r.name)}<small>${r.alerts?'🔔 с уведомлениями':'🔕 без уведомлений'} · ${r.id}</small></span>
+        <div class="btns"><button class="mini" data-sh="alerts" data-id="${r.id}">${r.alerts?'🔔':'🔕'}</button><button class="mini" data-sh="del" data-id="${r.id}">✖</button></div></div>`).join('')
+      : '<div class="hint">Пока никому не открыт доступ.</div>';
+    html += `</div><h2>Дать доступ на просмотр</h2><div class="card">`;
+    html += S.candidates.length ? S.candidates.map(u => `<div class="row"><span>${esc(u.name)}<small>${u.id}</small></span><button class="mini" data-sh="add" data-id="${u.id}">➕ Открыть</button></div>`).join('')
+      : '<div class="hint">Других пользователей бота нет. Человек должен написать боту /start, а админ — одобрить его.</div>';
+    html += `</div><div class="hint" style="margin:6px 4px">Зрители видят показания, историю и отключения. Менять настройки и удалять они не могут.</div>`;
+  } else html += '<div class="card hint">Делиться устройством может только его владелец.</div>';
+  if (S.is_admin) {
+    html += `<h2>Админ: пользователи бота</h2><div class="card" id="admbox">${ADM ? admHtml() : '<div class="hint">Загрузка…</div>'}</div>`;
+    if (!ADM) loadAdm();
+  }
+  box.innerHTML = html;
+}
+function admHtml(){
+  let h = ADM.users.map(u => `<div class="row"><span>${u.status==='admin'?'👑':u.status==='pending'?'🆕':'👤'} ${esc(u.name)}<small>${esc(u.username?'@'+u.username+' · ':'')}${u.id} · устройств: ${u.devices}</small></span>
+    <div class="btns">${u.status==='pending'?`<button class="mini" data-ad="ok" data-id="${u.id}">✅</button><button class="mini" data-ad="no" data-id="${u.id}">⛔</button>`:''}${u.status==='allowed'?`<button class="mini" data-ad="rm" data-id="${u.id}">🗑</button>`:''}</div></div>`).join('');
+  h += `<div class="inp" style="margin-top:10px"><input id="admNew" placeholder="Telegram ID" inputmode="numeric" style="flex:1;text-align:left"><button id="admAdd">➕ Добавить</button></div>`;
+  return h;
+}
+async function loadAdm(){ try { ADM = await api('/api/admin'); const b = $('admbox'); if (b) b.innerHTML = admHtml(); } catch(e){ const b=$('admbox'); if(b) b.textContent=e.message; } }
+async function admOp(op, target){ try { ADM = await post('/api/admin', {op, target}); const b = $('admbox'); if (b) b.innerHTML = admHtml(); buzz(); await loadSettings(); } catch(e){ toast(e.message, 1) } }
+$('accbody').addEventListener('click', async e => {
+  const sh = e.target.closest('[data-sh]');
+  if (sh) { try { const r = await post('/api/share', {did, op: sh.dataset.sh, viewer_id: +sh.dataset.id}); SETS = r.settings; renderAcc(); renderSet(); buzz(); } catch(err){ toast(err.message, 1) } return; }
+  const ad = e.target.closest('[data-ad]');
+  if (ad) { if (ad.dataset.ad === 'rm' && !(await confirmBox('Удалить пользователя и все его данные?'))) return; return admOp(ad.dataset.ad, +ad.dataset.id); }
+  if (e.target.id === 'admAdd') { const v = ($('admNew').value || '').replace(/\D/g, ''); if (v) admOp('add', +v); }
+});
+
+/* ---------- nav ---------- */
+function go(p) {
+  page = p;
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  ['live','hist','out','set','acc'].forEach(x => $('p-' + x).classList.toggle('hide', x !== p));
+  if (p === 'live') { drawLive(); poll(); }
+  if (p === 'hist') loadHist();
+  if (p === 'out') loadOut();
+  if (p === 'set' || p === 'acc') { renderSet(); renderAcc(); loadSettings(); }
+}
+document.querySelector('nav').addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(b.dataset.p); });
+$('hseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; hours = +b.dataset.h; [...$('hseg').children].forEach(x => x.classList.toggle('on', x === b)); loadHist(); });
+$('oseg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; odays = +b.dataset.d; [...$('oseg').children].forEach(x => x.classList.toggle('on', x === b)); loadOut(); });
+$('devsel').addEventListener('change', e => { did = +e.target.value; liveHist = []; state = null; SETS = null; go(page); });
+addEventListener('resize', () => go(page));
+document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+
+(async () => {
+  try {
+    const r = await api('/api/devices');
+    if (!r.devices.length) { showErr('Нет устройств. Подключите аккаунт Marstek в боте.'); return; }
+    did = r.devices[0].id;
+    if (r.devices.length > 1) { const s = $('devsel'); s.classList.remove('hide'); s.innerHTML = r.devices.map(d => `<option value="${d.id}">${d.shared ? '👁 ' : ''}${esc(d.name)}</option>`).join(''); }
+    await poll();
+    setInterval(poll, 2000);
+    setInterval(() => { if (page === 'hist') loadHist(); if (page === 'out') loadOut(); }, 30000);
+  } catch (e) { showErr(e.message); setConn('bad', 'ошибка'); }
+})();
+</script>
+</body>
+</html>

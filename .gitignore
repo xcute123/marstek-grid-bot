@@ -1,0 +1,22 @@
+# secrets / runtime data
+.env
+data.db
+data.db-*
+*.db
+mqtt_certs/
+bot_run.log
+*.log
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# local
+_backups/
+*.bak*
+*.broken
+tools/cloudflared.exe
+research/
+apk/
